@@ -1,9 +1,12 @@
+require "byebug"
+
 # ### Factors
 #
 # Write a method `factors(num)` that returns an array containing all the
 # factors of a given number.
 
 def factors(num)
+  (1..num).select{|n| num % n == 0}
 end
 
 # ### Bubble Sort
@@ -46,10 +49,27 @@ end
 # http://stackoverflow.com/questions/827649/what-is-the-ruby-spaceship-operator
 
 class Array
-  def bubble_sort!
+  def bubble_sort!(&prc)
+    prc = Proc.new {|num1,num2| num1 <=> num2} unless prc
+
+    len = self.length
+    sorted = true
+    while sorted do
+      sorted = false
+      (0..(len-2)).each do |i|
+        comp = prc.call(self[i],self[i+1])
+        if comp == 1
+          self[i], self[i+1] = self[i+1], self[i]
+          sorted = true
+        end
+      end
+    end
+    return self
   end
 
   def bubble_sort(&prc)
+    new = self.dup
+    new.bubble_sort!(&prc)
   end
 end
 
@@ -67,9 +87,19 @@ end
 # words).
 
 def substrings(string)
+  arr = []
+  string.each_char.with_index do |char,idx|
+    (idx...string.length).each do |jdx|
+      arr << string[idx..jdx]
+    end
+  end
+  return arr.uniq
 end
 
 def subwords(word, dictionary)
+  #debugger
+  strings = substrings(word)
+  strings.select {|word| dictionary.include?(word)}
 end
 
 # ### Doubler
@@ -77,6 +107,7 @@ end
 # array with the original elements multiplied by two.
 
 def doubler(array)
+  array.map{|num| num * 2}
 end
 
 # ### My Each
@@ -104,6 +135,12 @@ end
 
 class Array
   def my_each(&prc)
+    i = 0
+    while i < self.length
+      yield(self[i])
+      i += 1
+    end
+    self
   end
 end
 
@@ -122,12 +159,36 @@ end
 
 class Array
   def my_map(&prc)
+    arr = []
+    i = 0
+    while i < self.length
+      arr << yield(self[i])
+      i += 1
+    end
+    return arr
   end
 
   def my_select(&prc)
+    arr = []
+    i = 0
+    while i < self.length
+      if yield(self[i])
+        arr << self[i]
+      end
+      i += 1
+    end
+    return arr
   end
 
   def my_inject(&blk)
+
+    acc = self[0]
+    i = 1
+    while i < self.length
+      acc = yield(acc,self[i])
+      i += 1
+    end
+    return acc
   end
 end
 
@@ -141,4 +202,5 @@ end
 # ```
 
 def concatenate(strings)
+  strings.inject("",&:+)
 end
